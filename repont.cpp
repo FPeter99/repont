@@ -12,7 +12,6 @@ private:
     int person_id;          // Unique identifier
     std::string name;       // Name of the person
     int bank_account_number; // Bank account number
-    int cashout_history;
 
     // Generates a unique ID by checking existing persons
     int generateUniqueId(const std::vector<Person>& person_list) {
@@ -21,29 +20,28 @@ private:
 
         do {
             id = rand() % 9000 + 1000; // Generates a random number between 1000 and 9999
-            unique = false;
+            unique = true;
 
             // Check if the generated ID already exists
-            for (Person person : person_list) {
+            for (const Person& person : person_list) {
                 if (person.getPersonId() == id) {
                     unique = false;
                     break;
                 }
             }
-        } while (unique);
+        } while (!unique);
 
         return id;
     }
 
 public:
     // Constructor
-    Person(const std::string& name, int bank_accaunt_number, std::vector<Person>& person_list) {
+    Person(const std::string& name, int bank_account_number, std::vector<Person>& person_list) {
         this->name = name;                  // Set the name
         returned_bottles_cheaper = 0;              // Default value
         returned_bottles_expensive = 0;             // Default value
         person_id = generateUniqueId(person_list); // Generate unique ID
-        this->bank_account_number = bank_accaunt_number;          // Set the bank account number
-        cashout_history = 0;
+        this->bank_account_number = bank_account_number;          // Set the bank account number
 
         // Add the new person to the list
         person_list.push_back(*this);
@@ -54,17 +52,17 @@ public:
         return returned_bottles_cheaper;
     }
 
-    // Setter for returned_bottles
-    void setReturnedBottles(int returned_bottles_cheaper) {
-        this->returned_bottles_cheaper = returned_bottles_cheaper;
-    }
-
+    // Getter for returned_bottles
     int getReturnedBottlesExpensive() const {
         return returned_bottles_expensive;
     }
 
     // Setter for returned_bottles
-    void setReturnedBottles(int returned_bottles_expensive) {
+    void setReturnedBottlesCheaper(int returned_bottles_cheaper) {
+        this->returned_bottles_cheaper = returned_bottles_cheaper;
+    }
+
+    void setReturnedBottlesExpensive(int returned_bottles_expensive){
         this->returned_bottles_expensive = returned_bottles_expensive;
     }
 
@@ -88,51 +86,38 @@ public:
         this->bank_account_number = bank_account_number;
     }
 
-    int calculateSum(){
-        return 50*returned_bottles_cheaper + 100*returned_bottles_expensive;
+    int calculateSum() const {
+        return 50 * returned_bottles_cheaper + 100 * returned_bottles_expensive;
     }
 
-    void cashOut(){
-        int cash = calculateSum();
-        void cashOut_send(int bank_account_number, int cash);
-        std::cout << "You cashed out " << cash << " Ft." << std::endl;
 
-        returned_bottles_cheaper = 0;
-        returned_bottles_expensive = 0;
-        cashout_history += cash;
+    std::string cashoutHistory() const {
+        return std::to_string(returned_bottles_cheaper) + " cheaper bottles and " + std::to_string(returned_bottles_expensive) + " expensive bottles";
     }
-
-    int cashoutHistory(){
-        return cashout_history;
-    }
-
 };
-
 
 void addBottle(int to_add_Id, int cheaper, int expensive, std::vector<Person>& person_list) {
     // Find the user by ID
     for (Person& person : person_list) {
         if (person.getPersonId() == to_add_Id) {
             // If it found the Person object, it can add the water bottles
-            person.setReturnedBottles(cheaper); // assuming this sets cheaper bottles
-            person.setReturnedBottles(expensive); // assuming this sets expensive bottles
-            std::cout << "Bottles added successfully addet to "<< person.getName() <<"-s accaunt!" << std::endl;
-            std::cout << "It worth "<<person.calculateSum()<<" Ft." << std::endl;
+            person.setReturnedBottlesCheaper(person.getReturnedBottlesCheaper() + cheaper);
+            person.setReturnedBottlesExpensive(person.getReturnedBottlesExpensive() + expensive);
+            std::cout << "Bottles added successfully to " << person.getName() << "'s account!" << std::endl;
+            std::cout << "It worth " << person.calculateSum() << " Ft." << std::endl;
             return;
         }
     }
-    // Ha nem találta meg a Person objektumot, akkor kiírhat egy hibaüzenetet
+    // If it didn't find the Person object, it can print an error message
     std::cout << "Error: User not found with ID " << to_add_Id << std::endl;
 }
 
-
-
 void registerUser(std::vector<Person>& person_list){
-    std::cout << "Full name:";
+    std::cout << "Full name: ";
     std::string name;
     std::cin >> name;
 
-    std::cout << "Bank account number:";
+    std::cout << "(12345678-12345678-12345678) Bank account number: ";
     int bank_account_number;
     std::cin >> bank_account_number;
 
@@ -140,50 +125,96 @@ void registerUser(std::vector<Person>& person_list){
     std::cout << "User registered successfully!" << std::endl;
 }
 
-void printAllUsers(std::vector<Person>& person_list){
+void printAllUsers(const std::vector<Person>& person_list){
     for (const Person& person : person_list) {
-        std::cout << "Name: " << person.getName() << ", Bank account number: " << person.getBankAccountNumber() <<", cashout history: "<< person.cashoutHistory() << std::endl;
+        std::cout << "Name: " << person.getName() << ", Bank account number: " << person.getBankAccountNumber() << ", cashout history: " << person.cashoutHistory() << std::endl;
     }
 }
 
-void cashOut(int to_send_Id, std::vector<Person>& person_list){
-    for (Person& person : person_list) {
-        if (person.getPersonId() == to_send_Id) {
-            person.cashOut();
-            return;
-        }
-    }
-    std::cout << "Error: User not found with ID " << to_send_Id << std::endl;
-}
-
-void toplist(std::vector<Person>& person_list) {
+void toplist(const std::vector<Person>& person_list) {
     std::vector<Person> sorted = person_list;
-    std::sort(sorted.begin(), sorted.end(),[](const Person& a, const Person& b) {return a.getCashOutHistory() > b.getCashOutHistory();});
+    std::sort(sorted.begin(), sorted.end(), [](const Person& a, const Person& b) { return a.calculateSum() > b.calculateSum(); });
 
     int rank = 1;
     for (const auto& person : sorted) {
-        std::cout << "Rank " << (rank) << ": " << person.getName()<< " - Cash out history: " << person.getCashOutHistory() << std::endl;
+        std::cout << "Rank " << rank << ": " << person.getName() << " - Cash out history: " << person.calculateSum() << " Ft. - " << std::endl;
         rank++;
-        if (&person - &sorted[0] + 1 == 5) break;
+        if (rank > 5) break;
     }
 }
 
+void use_the_repont(std::vector<Person>& person_list){
+    int input_id;
+    bool valid_id = false;
+
+    do{
+        std::cout << "What is your ID?: " << std::endl;
+        std::cin >> input_id;
+
+        for (Person& person : person_list) {
+            if (person.getPersonId() == input_id) {
+                valid_id = true;
+                break;
+            }
+        }
+        if(!valid_id){
+            std::cout << "Invalid ID!" << std::endl;
+        }
+    } while(!valid_id);
+
+    std::cout << "How many cheaper bottles did you return?: " << std::endl;
+    int cheaper;
+    std::cin >> cheaper;
+
+    std::cout << "How many expensive bottles did you return?: " << std::endl;
+    int expensive;
+    std::cin >> expensive;
+
+    addBottle(input_id, cheaper, expensive, person_list);
+
+    //sendMoney(int person.getBankAccountNumber(), int cheaper * 50 + expensive * 100);
+}
+
+void sendMoney(int from, int to, int amount){
+
+    //send money
+
+    std::cout << "Money sent successfully!" << std::endl;
+}
+
 int main() {
-    // Initialize random seed
-    std::srand(std::time(0));
+    while(true){
+        std::cout << "welcome to the Repont!" << std::endl;
+        std::cout << "1. Register user" << std::endl;
+        std::cout << "2. Use the Repont" << std::endl;
+        std::cout << "3. Print all users" << std::endl;
+        std::cout << "4. Toplist" << std::endl;
+        std::cout << "5. Exit" << std::endl;
 
-    // To store all persons
-    std::vector<Person> person_list;
+        std::vector<Person> person_list;
 
+        int choice;
+        std::cout << "Enter your choice: ";
+        std::cin >> choice;
 
-    // Create persons and add them to the list
-
-
-
-    // Display information about each person
-    for (const Person& person : person_list) {
-        std::cout << "Name: " << person.getName() << ", ID: " << person.getPersonId() << ", Returned Bottles: ";
+        switch (choice) {
+            case 1:
+                registerUser(person_list);
+                break;
+            case 2:
+                use_the_repont(person_list);
+                break;
+            case 3:
+                printAllUsers(person_list);
+                break;
+            case 4:
+                toplist(person_list);
+                break;
+            case 5:
+                return 0;
+            default:
+                std::cout << "Invalid choice!" << std::endl;
+                break;
+        }
     }
-
-    return 0;
 }

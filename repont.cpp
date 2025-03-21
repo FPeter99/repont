@@ -4,6 +4,8 @@
 #include <ctime>
 #include <string>
 #include <algorithm>
+#include <limits> // Required for std::numeric_limits
+
 
 class Person {
 private:
@@ -92,7 +94,7 @@ public:
 
 
     std::string cashoutHistory() const {
-        return std::to_string(returned_bottles_cheaper) + " cheaper bottles and " + std::to_string(returned_bottles_expensive) + " expensive bottles";
+        return std::to_string(returned_bottles_cheaper) + " cheaper and " + std::to_string(returned_bottles_expensive) + " expensive bottles";
     }
 };
 
@@ -103,8 +105,8 @@ void addBottle(int to_add_Id, int cheaper, int expensive, std::vector<Person>& p
             // If it found the Person object, it can add the water bottles
             person.setReturnedBottlesCheaper(person.getReturnedBottlesCheaper() + cheaper);
             person.setReturnedBottlesExpensive(person.getReturnedBottlesExpensive() + expensive);
-            std::cout << "Bottles added successfully to " << person.getName() << "'s account!" << std::endl;
-            std::cout << "It worth " << person.calculateSum() << " Ft." << std::endl;
+            std::cout << std::endl<< "Bottles added successfully to " << person.getName() << "'s account!" << std::endl;
+            std::cout << "It worth " << person.calculateSum() << " Ft." << std::endl << std::endl;
             return;
         }
     }
@@ -115,23 +117,34 @@ void addBottle(int to_add_Id, int cheaper, int expensive, std::vector<Person>& p
 void registerUser(std::vector<Person>& person_list){
     std::cout << "Full name: ";
     std::string name;
-    std::cin >> name;
+
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::getline(std::cin, name);
 
     std::cout << "(12345678-12345678-12345678) Bank account number: ";
     int bank_account_number;
     std::cin >> bank_account_number;
 
+
     Person person(name, bank_account_number, person_list);
-    std::cout << "User registered successfully!" << std::endl;
+    std::cout << "User registered successfully!" << std::endl << std::endl;
+    
+    std::cout << "Your user ID is: " << person.getPersonId() << std::endl  << std::endl;
 }
 
 void printAllUsers(const std::vector<Person>& person_list){
+    if(person_list.empty()){
+        std::cout << "No one has registrates to repont" << std::endl << std::endl;
+    }
     for (const Person& person : person_list) {
-        std::cout << "Name: " << person.getName() << ", Bank account number: " << person.getBankAccountNumber() << ", cashout history: " << person.cashoutHistory() << std::endl;
+        std::cout << "Name: " << person.getName() << ", Bank account number: " << person.getBankAccountNumber() << ", cashout history: " << person.cashoutHistory() << std::endl << std::endl;
     }
 }
 
 void toplist(const std::vector<Person>& person_list) {
+    if(person_list.empty()){
+        std::cout << "No one has registrates to repont" << std::endl << std::endl;
+    }
     std::vector<Person> sorted = person_list;
     std::sort(sorted.begin(), sorted.end(), [](const Person& a, const Person& b) { return a.calculateSum() > b.calculateSum(); });
 
@@ -148,7 +161,7 @@ void use_the_repont(std::vector<Person>& person_list){
     bool valid_id = false;
 
     do{
-        std::cout << "What is your ID?: " << std::endl;
+        std::cout << "What is your ID?: ";
         std::cin >> input_id;
 
         for (Person& person : person_list) {
@@ -162,11 +175,11 @@ void use_the_repont(std::vector<Person>& person_list){
         }
     } while(!valid_id);
 
-    std::cout << "How many cheaper bottles did you return?: " << std::endl;
+    std::cout << "How many cheaper bottles did you return?: ";
     int cheaper;
     std::cin >> cheaper;
 
-    std::cout << "How many expensive bottles did you return?: " << std::endl;
+    std::cout << "How many expensive bottles did you return?: ";
     int expensive;
     std::cin >> expensive;
 
@@ -183,15 +196,18 @@ void sendMoney(int from, int to, int amount){
 }
 
 int main() {
+    
+    std::cout << "welcome to the Repont!" << std::endl << std::endl;
+    
+    std::vector<Person> person_list;
+    
     while(true){
-        std::cout << "welcome to the Repont!" << std::endl;
+        
         std::cout << "1. Register user" << std::endl;
         std::cout << "2. Use the Repont" << std::endl;
         std::cout << "3. Print all users" << std::endl;
         std::cout << "4. Toplist" << std::endl;
         std::cout << "5. Exit" << std::endl;
-
-        std::vector<Person> person_list;
 
         int choice;
         std::cout << "Enter your choice: ";
